@@ -16,6 +16,9 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+
+include Puppet::Util::Diff
+
 Puppet::Type.newtype(:concat_build) do
   @doc = "Build file from fragments"
 
@@ -158,11 +161,20 @@ Puppet::Type.newtype(:concat_build) do
     end
 
     def insync?(is)
-      return false
+      # Build the temporary file, and then diff it against the actual one
+      provider.build_file(false)
+      diffs = diff(@resource[:target],"/var/lib/puppet/concat/output/#{@resource[:name]}.out") 
+      if diffs != "" then
+        puts diffs
+        return false
+      else
+        return true
+      end
     end
 
     def sync
-      provider.build_file
+      # Move the tempfile into place
+      provider.build_file(true)
     end
 
     def change_to_s(currentvalue, newvalue)
