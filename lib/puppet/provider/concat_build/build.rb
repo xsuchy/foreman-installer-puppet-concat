@@ -22,6 +22,7 @@ Puppet::Type.type(:concat_build ).provide :concat_build do
   desc "concat_build provider"
 
   def build_file(build = false)
+
     if File.directory?("/var/lib/puppet/concat/fragments/#{@resource[:name]}") and not build then
       # Just diff'ing - build the file but don't move it yet
       begin
@@ -107,9 +108,10 @@ Puppet::Type.type(:concat_build ).provide :concat_build do
       end
     elsif File.directory?("/var/lib/puppet/concat/fragments/#{@resource[:name]}") and build then
       # This time for real - move the built file into the fragments dir
-      FileUtils.touch("/var/lib/puppet/concat/fragments/#{@resource[:name]}/.~concat_fragments")
       if @resource[:target] and check_onlyif then
         debug "Copying /var/lib/puppet/concat/output/#{@resource[:name]}.out to #{@resource[:target]}"
+        backup = `puppet filebucket backup --local --bucketdir=/var/lib/puppet/clientbucket #{@resource[:target]}`
+        info "Filebucketing #{backup}".strip
         FileUtils.cp("/var/lib/puppet/concat/output/#{@resource[:name]}.out", @resource[:target])
       elsif @resource[:target] then
         debug "Not copying to #{@resource[:target]}, 'onlyif' check failed"

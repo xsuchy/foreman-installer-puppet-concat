@@ -16,10 +16,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
-include Puppet::Util::Diff
-
 Puppet::Type.newtype(:concat_build) do
+  require 'puppet/util/diff'
   @doc = "Build file from fragments"
 
   def extractexe(cmd)
@@ -161,15 +159,16 @@ Puppet::Type.newtype(:concat_build) do
     end
 
     def insync?(is)
-      # Build the temporary file, and then diff it against the actual one
+      # Always build the file for diff'ing - otherwise you can hit a file-not-found later
       provider.build_file(false)
-      diffs = diff(@resource[:target],"/var/lib/puppet/concat/output/#{@resource[:name]}.out") 
-      if diffs != "" then
-        puts diffs
-        return false
-      else
-        return true
-      end
+      
+      # Can't possibly be insync if the target file doesn't even exist
+      return false unless File.exists?(@resource[:target])
+
+      # Build the temporary file, and then diff it against the actual one
+      diffs = diff(@resource[:target],"/var/lib/puppet/concat/output/#{@resource[:name]}.out")
+      puts diffs unless (result = diffs.empty?)
+      result
     end
 
     def sync
@@ -209,6 +208,10 @@ Puppet::Type.newtype(:concat_build) do
     # in the catalog
     if resource.empty? and File.directory?("/var/lib/puppet/concat/fragments/#{self[:name]}") then
       FileUtils.rm_rf("/var/lib/puppet/concat/fragments/#{self[:name]}")
+    else
+      # Cleanup any cruft fragments from previous runs which are no longer needed
+      files = resource.map { |r| "/var/lib/puppet/concat/fragments/#{self[:name]}/#{r[:name].split("+")[1]}" }
+      (Dir.glob("/var/lib/puppet/concat/fragments/#{self[:name]}/*") - files).each { |f| File.delete(f) }
     end
     if self[:parent_build] then
       found_parent = false

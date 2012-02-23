@@ -47,15 +47,20 @@ TODO
 ----
 
 * Don't hardcode /var/lib/puppet. Instead use the value of $vardir.
+* Rewrite to use Puppet File resources, to get better handling of
+  things like Filebuckets. See the Tidy type/provider for examples.
 
 Copyright
 ---------
 
-Copyright (C) 2011 Onyx Point, Inc. <http://onyxpoint.com/>
+Copyright (C) 2012 iBahn <http://ibahn.com/>
 
-This file is part of the Onyx Point concat puppet module.
+This file is part of the iBahn concat puppet module. It is forked from
+the Onyx Point concat module, with extensions for in-sync checks and
+filebucketing of files. See <https://github.com/onyxpoint/pupmod-concat>
+for their module. My thanks to them for the starting point :)
 
-The Onyx Point concat puppet module is free software: you can redistribute it
+The iBahn concat puppet module is free software: you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
 published by the Free Software Foundation, either version 3 of the License,
 or (at your option) any later version.

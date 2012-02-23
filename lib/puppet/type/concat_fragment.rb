@@ -35,10 +35,11 @@ Puppet::Type.newtype(:concat_fragment) do
 
       if File.exist?(frag_file)
         data = File.read(frag_file)
-        if data == @resource[:content] then
+        if data != @resource[:content] then
           debug "Disk contents differ from resource content for #{@resource[:name]}"
-          return true
+          return false
         end
+        return true
       else
         return false
       end

@@ -23,18 +23,13 @@ Puppet::Type.type(:concat_fragment).provide :concat_fragment do
 
   def create
     begin
-      group = @resource[:name].split('+').first
-      fragment = @resource[:name].split('+')[1..-1].join('+')
+      group, fragment = @resource[:name].split('+',2)
 
-      if File.file?("/var/lib/puppet/concat/fragments/#{group}/.~concat_fragments") then
-        debug "Purging /var/lib/puppet/concat/fragments/#{group}!"
-        FileUtils.rm_rf("/var/lib/puppet/concat/fragments/#{group}")
-      end
+      fragments_dir = File.join('/var/lib/puppet/concat/fragments',group)
 
-      FileUtils.mkdir_p("/var/lib/puppet/concat/fragments/#{group}")
-      f = File.new("/var/lib/puppet/concat/fragments/#{group}/#{fragment}", "w")
-      f.puts @resource[:content]
-      f.close
+      # Write the actual fragment
+      FileUtils.mkdir_p(fragments_dir)
+      File.open(File.join(fragments_dir,fragment), "w"){|f| f << @resource[:content] }
     rescue Exception => e
       fail Puppet::Error, e
     end
